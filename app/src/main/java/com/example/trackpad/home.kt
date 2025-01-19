@@ -7,7 +7,6 @@ import android.view.MotionEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -28,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,17 +41,18 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.concurrent.thread
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "NotConstructor")
 @Composable
 fun Home() {
-    var x by remember { mutableStateOf(0f) }
-    var y by remember { mutableStateOf(0f) }
+    var x by remember { mutableFloatStateOf(0f) }
+    var y by remember { mutableFloatStateOf(0f) }
     val screenWidth = Resources.getSystem().displayMetrics.widthPixels
     val screenHeight = Resources.getSystem().displayMetrics.heightPixels
-    var lastX by remember { mutableStateOf(0f) }
-    var lastY by remember { mutableStateOf(0f) }
+    var lastX by remember { mutableFloatStateOf(0f) }
+    var lastY by remember { mutableFloatStateOf(0f) }
     var isDragging by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -107,21 +108,7 @@ fun Home() {
 //                                sendTouchData(data().webSocket,x, y, "touch")
 //                            }
 //                        }
-                        .pointerInput(Unit) {
-                            detectTapGestures(
-                                onLongPress = {
-                                    Log.d("TrackPad", "Long Pressed")
-                                },
-                                onDoubleTap = {
-                                    Log.d("TrackPad", "Double Tapped")
-                                },
-                                onTap = {
-                                    Log.d("TrackPad", "Tapped")
 
-                                    sendTouchData(data().webSocket, x, y, "tap")
-                                },
-                            )
-                        }
                         .pointerInteropFilter { event ->
                             when (event.action) {
                                 MotionEvent.ACTION_DOWN -> {
@@ -129,6 +116,7 @@ fun Home() {
                                     lastX = event.x
                                     lastY = event.y
                                     isDragging = true
+
                                     sendTouchData(data().webSocket, event.x, event.y, "down")
                                 }
 
@@ -187,7 +175,9 @@ fun Home() {
                     horizontalArrangement = Arrangement.Absolute.SpaceEvenly
 
                 ){
+
                     Row(
+
                         modifier = Modifier
                             .background(color = Color.Green)
                             .fillMaxHeight()
@@ -196,14 +186,25 @@ fun Home() {
                                 detectTapGestures(
                                     onLongPress = {
                                         Log.d("TrackPad", "Long Pressed")
+                                        thread(start = true) {
+                                            sendTouchData(data().webSocket, x, y, "long_press_left")
+                                        }
+                                        //sendTouchData(data().webSocket, x, y, "long_press_left")
                                     },
                                     onDoubleTap = {
                                         Log.d("TrackPad", "Double Tapped")
+                                        sendTouchData(data().webSocket, x, y, "double_tap_left")
                                     },
                                     onTap = {
                                         Log.d("TrackPad", "Tapped")
 
-                                        sendTouchData(data().webSocket, x, y, "tap")
+//                                        sendTouchData(data().webSocket, x, y, "tap_left")
+                                        thread (
+                                            start = true
+                                        ){
+                                            sendTouchData(data().webSocket, x, y, "tap_left")
+                                        }
+
                                     },
                                 )
                             }
@@ -217,13 +218,32 @@ fun Home() {
                             style = TextStyle(color = Color.White)
                         )
                     }
-                    Row(
+                                      Row(
                         modifier = Modifier
                             .background(color = Color.Blue)
                             .fillMaxHeight()
                             .width(200.dp)
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onLongPress = {
+                                        Log.d("TrackPad", "Long Pressed")
+                                        sendTouchData(data().webSocket, x, y, "long_press_right")
+                                    },
+                                    onDoubleTap = {
+                                        Log.d("TrackPad", "Double Tapped")
+                                        sendTouchData(data().webSocket, x, y, "double_tap_right")
+                                    },
+                                    onTap = {
+                                        Log.d("TrackPad", "Tapped")
+
+                                        sendTouchData(data().webSocket, x, y, "tap_right")
+                                    },
+
+                                )
+                            }
 
                     )
+
                     {
                         Text(
                             text = "right",

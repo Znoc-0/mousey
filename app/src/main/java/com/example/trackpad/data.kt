@@ -7,9 +7,9 @@ import okhttp3.WebSocketListener
 import org.json.JSONObject
 class data {
 
-    val client = OkHttpClient()
-    val request = Request.Builder().url("ws://192.168.1.34:8765/ws").build()
-    val webSocketListener = object : WebSocketListener() {
+    private val client = OkHttpClient()
+    private val request = Request.Builder().url("ws://192.168.1.34:8765/ws").build()
+    private val webSocketListener = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
             super.onOpen(webSocket, response)
             println("Connected to WebSocket")
